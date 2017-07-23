@@ -1,0 +1,776 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE quest SYSTEM "/quest.dtd">
+<quest debug="false" language="english">
+
+    <about>
+        <title>Chance Starship</title>
+        <author>David Maitland</author>
+        <intro>This is the spaceship's computer speaking.
+            Astronaut, you have been awoken before our final deep space destination due to the power system being drained.
+            Only atmospheric and heating systems are online. I am also detecting malfunctions in more than one airlock.
+            As the designated engineer it is your responsibility to collect 100 energy cells to get the engines engaged again.
+            Please find your repair satchel containing your laser tool, a flashlight with 6 energy cells and 4 protein bars.</intro>
+    </about>
+
+    <station id="start">
+        <number name="cards" value="0"/>
+        <number name="max hitpoints" value="15"/>
+        <number name="energy cell target" value="99"/>
+        <number name="energy cells" value="6"/>
+        <number name="protein bars" value="4"/>
+        <number name="hunger cards counter" value="0"/>
+        <number name="hunger threshold" value="6"/>
+        <number name="flashlight duration" value="5"/>
+        <number name="light cards left counter" value="10"/>
+        <number name="gun magazine size" value="10"/>
+        <number name="gun magazine" value="0"/>
+        <number name="open paths" value="1"/>
+        <number name="emp devices" value="0"/>
+        <state name="has satchel" value="true"/>
+        <string name="came from" value="aft"/>
+        <choice station="take movement card">Activating the flashlight you begin you exploration of the starship.</choice>
+    </station>
+
+    <station id="take movement card">
+        <number name="cards" value="[cards]+1"/>
+        <number name="hunger cards counter" value="[hunger cards counter]+1"/>
+        <number name="light cards left counter" value="[light cards left counter]-1"/>
+        <number name="cardNumber" value="{random 1, 13}"/>
+
+        <text></text>
+
+        <if check="[ship has power]">
+            <text>Congratulations you have succeeded in restoring power to the starship.
+                You return to your sleep pod and dream of reaching your destination.</text>
+        </if>
+
+        <if check="[energy cells] greater [energy cell target]">
+            <state name="gun ready" value="[has gun] &amp;&amp; [gun magazine] > 0"/>
+            <number name="energy cells" value="[energy cells]-100"/>
+            <text>You have found enough energy cells to re-power the ship.
+                You make your way to the engine room to install them.
+                You task is interrupted by a guttural clicking sound.
+                Looking round you're shocked to see a gigantic green spider stalk toward you.
+            </text>
+            <number name="monster hitpoints" value="15"/>
+            <state name="ship has power" value="true"/>
+            <choice station="engine room" check="[has gun] and [energy cells] lower 1">
+                With all your energy cells installed you have none left for your gun.
+                You look doubtfully at your laser tool and brace yourself.
+            </choice>
+            <choice station="engine room" check="[has gun] and [energy cells] greater 0">
+                Hoping you have enough energy cells for the battle, you ready your gun.
+            </choice>
+            <choice station="engine room" check="not [has gun]">
+                You look doubtfully at your laser tool and brace yourself.
+            </choice>
+        </if>
+
+        <if check="[has gun] and [gun magazine size] != [gun magazine] and [energy cells] greater [gun magazine size] - [gun magazine] -1">
+            <number name="energy cells" value="[energy cells] - [gun magazine size] + [gun magazine]"/>
+            <number name="gun magazine" value="[gun magazine size]"/>
+            <state name="gun ready" value="true"/>
+            <text>
+                You reload the laser gun.
+                You have [energy cells] energy cells left.
+            </text>
+            <choice station="take movement card"></choice>
+        </if>
+
+        <if check="[has gun] and [gun magazine size] != [gun magazine] and [energy cells] greater 0">
+            <number name="energy cells" value="0"/>
+            <number name="gun magazine" value="[gun magazine] + [energy cells]"/>
+            <state name="gun ready" value="true"/>
+            <text>
+                You reload the laser gun with the last of your energy cells left.
+            </text>
+            <choice station="take movement card"></choice>
+        </if>
+
+        <if check="[hunger cards counter] greater [hunger threshold] and [protein bars] greater 0">
+            <number name="protein bars" value="[protein bars] - 1"/>
+            <text>You feel hungry so stop and eat.</text>
+            <number name="hunger cards counter" value="0"/>
+            <choice station="take movement card">You have [protein bars] protein bars left.</choice>
+        </if>
+
+        <if check="[hunger cards counter] greater [hunger threshold] and [protein bars] lower 1">
+            <text>You're famished but have run out of protein bars.
+                Your progress gets slower and slower as you energy level matches your starship's.
+                Eventually you succumb to sleep and never hear the oxygen depletion alarm.</text>
+            <choice station="end"></choice>
+        </if>
+
+        <if check="[light cards left counter] lower 1 and [energy cells] greater 0">
+            <number name="energy cells" value="[energy cells] - 1"/>
+            <text>Your flashlight blinks out. You insert another energy cell.</text>
+            <number name="light cards left counter" value="[flashlight duration]"/>
+            <choice station="take movement card">You have [energy cells] energy cells left.</choice>
+        </if>
+
+        <if check="[light cards left counter] lower 1 and [energy cells] lower 1">
+            <text>Your flashlight blinks out but you have run out of energy cells.</text>
+            <choice station="end">Wandering in the dark you hear the life support system go offline.
+            You wonder if you'll run out of oxygen before you freeze to death.</choice>
+        </if>
+
+        <if check="[cardNumber] = 1">
+            <text>You get a bad feeling.</text>
+            <choice station="trap">What's that noise ?</choice>
+        </if>
+
+        <if check="[cardNumber] = 2 and [came from] != 'forward'">
+            <text></text>
+            <choice station="go forward"></choice>
+        </if>
+
+        <if check="[cardNumber] = 3 and [came from] != 'starboard'">
+            <text></text>
+            <choice station="go starboard"></choice>
+        </if>
+
+        <if check="[cardNumber] = 4 and [came from] != 'aft'">
+            <text></text>
+            <choice station="go aft"></choice>
+        </if>
+
+        <if check="[cardNumber] = 5 and [came from] != 'port'">
+            <text></text>
+            <choice station="go port"></choice>
+        </if>
+
+        <if check="[cardNumber] = 6">
+            <text>You come to a junction of two corridors.</text>
+            <number name="open paths" value="[open paths] + 2"/>
+            <choice station="go forward" check="[came from] != 'forward'">Go forward.</choice>
+            <choice station="go starboard" check="[came from] != 'starboard'">Go starboard.</choice>
+            <choice station="go aft" check="[came from] != 'aft'">Go aft.</choice>
+            <choice station="go port" check="[came from] != 'port'">Go aport.</choice>
+            <choice station="take movement card" check="[open paths] greater 3">Go back and take a different corridor.</choice>
+        </if>
+
+        <if check="[cardNumber] = 7">
+            <text>You hear the noise of something approaching.</text>
+            <choice station="fight monster" check="not [gun ready]">You take out your laser tool and continue.</choice>
+            <choice station="fight monster" check="[gun ready]">You take out your laser gun and continue.</choice>
+        </if>
+
+        <if check="[cardNumber] = 8">
+            <text>The suddenly stop.</text>
+            <choice station="trap">The ship reveals a surprise.</choice>
+        </if>
+
+        <if check="[cardNumber] = 9 and [cards] greater 5">
+            <text>The corridor ends a bulkhead.</text>
+            <number name="open paths" value="[open paths] + 1"/>
+            <choice station="take movement card" check="[open paths] > 1">Go back and take a different corridor.</choice>
+            <choice station="end" check="[open paths] lower 2">
+                There's no where left to explore. Without enough energy cells your stranded in space.
+            </choice>
+        </if>
+
+        <if check="[cardNumber] = 9 and [cards] lower 6 and [came from] != 'starboard' and [came from] != 'port'">
+            <text>You see a hatch in the starboard bulkhead.</text>
+            <number name="open paths" value="[open paths] + 1"/>
+            <string name="came from" value="port"/>
+            <choice station="go starboard">You open the hatch.</choice>
+            <choice station="go forward" check="[came from] = 'aft'">Continue past the hatch.</choice>
+            <choice station="go aft" check="[came from] = 'forward'">Continue past the hatch.</choice>
+            <choice station="take movement card" check="[open paths] greater 1">Go back and take a different corridor.</choice>
+        </if>
+
+        <if check="[cardNumber] = 9 and [cards] lower 6 and [came from] != 'forward' and [came from] != 'aft'">
+            <text>You see a hatch in the forward bulkhead.</text>
+            <number name="open paths" value="[open paths] + 1"/>
+            <string name="came from" value="aft"/>
+            <choice station="go forward">You open the hatch.</choice>
+            <choice station="go starboard" check="[came from] = 'port'">Continue past the hatch.</choice>
+            <choice station="go port" check="[came from] = 'starboard'">Continue past the hatch.</choice>
+            <choice station="take movement card" check="[open paths] greater 1">Go back and take a different corridor.</choice>
+        </if>
+
+        <if check="[cardNumber] = 10 and [came from] != 'starboard' and [came from] != 'port'">
+            <text>You see a hatch in the port bulkhead.</text>
+            <number name="open paths" value="[open paths] + 1"/>
+            <string name="came from" value="starboard"/>
+            <choice station="go port">You open the hatch.</choice>
+            <choice station="go forward" check="[came from] = 'aft'">Continue past the hatch.</choice>
+            <choice station="go aft" check="[came from] = 'forward'">Continue past the hatch.</choice>
+            <choice station="take movement card" check="[open paths] greater 1">Go back and take a different corridor.</choice>
+        </if>
+
+        <if check="[cardNumber] = 10 and [came from] != 'forward' and [came from] != 'aft'">
+            <text>You see a hatch in the aft bulkhead.</text>
+            <number name="open paths" value="[open paths] + 1"/>
+            <string name="came from" value="forward"/>
+            <choice station="go aft">You open the hatch.</choice>
+            <choice station="go starboard" check="[came from] = 'port'">Continue past the hatch.</choice>
+            <choice station="go port" check="[came from] = 'starboard'">Continue past the hatch.</choice>
+            <choice station="take movement card" check="[open paths] greater 1">Go back and take a different corridor.</choice>
+        </if>
+
+        <if check="[cardNumber] lower 12">
+            <text>You corridor meets another.</text>
+            <number name="open paths" value="[open paths] + 1"/>
+            <choice station="go starboard" check="[came from] = 'forward' or [came from] = 'aft'">Go starboard.</choice>
+            <choice station="go port" check="[came from] = 'forward' or [came from] = 'aft'">Go aport.</choice>
+            <choice station="go forward" check="[came from] = 'starboard' or [came from] = 'port'">Go forward.</choice>
+            <choice station="go aft" check="[came from] = 'starboard' or [came from] = 'port'">Go aft.</choice>
+            <choice station="take movement card" check="[open paths] greater 2">Go back and take a different corridor.</choice>
+        </if>
+
+        <if check="[cardNumber] = 12">
+            <text>You find a storage bay.</text>
+            <choice station="take treasure">You ransack the place for energy cells.</choice>
+        </if>
+
+        <if check="[cardNumber] = 13">
+            <text>An alien figure bursts out of the ceiling.</text>
+            <choice station="fight monster" check="not [gun ready]">You grab your laser tool and defend yourself.</choice>
+            <choice station="fight monster" check="[gun ready]">You grab your laser gun and defend yourself.</choice>
+        </if>
+
+        <else>
+            <text>
+                You have become confused. You take a moment to get you bearings before choosing your path.
+            </text>
+            <choice station="take movement card">You move forward.</choice>
+        </else>
+    </station>
+
+    <station id="go forward">
+        <text></text>
+        <string name="came from" value="aft"/>
+        <choice station="take movement card">You follow the corridor forward.</choice>
+    </station>
+
+    <station id="go starboard">
+        <text></text>
+        <string name="came from" value="port"/>
+        <choice station="take movement card">You follow the corridor the starboard side.</choice>
+    </station>
+
+    <station id="go aft">
+        <text></text>
+        <string name="came from" value="forward"/>
+        <choice station="take movement card">You follow the corridor aft.</choice>
+    </station>
+
+    <station id="go port">
+        <text></text>
+        <string name="came from" value="starboard"/>
+        <choice station="take movement card">You follow the corridor to port side.</choice>
+    </station>
+
+    <station id="trap">
+        <number name="cardNumber" value="{random 1, 13}"/>
+
+        <text></text>
+
+        <if check="[cardNumber] = 1">
+            <text>The airlock in this section looks damaged. As you pass, its hinges burst.</text>
+            <choice station="airlock trap">The vacuum of space drags everything through the hole.</choice>
+        </if>
+
+        <if check="[cardNumber] = 2">
+            <text>You can hear the dripping of water before you see wet bulkheads in the next section.
+                As you hurry through the bulkhead bursts open and a strong flow of water washes you down the corridor.</text>
+            <choice station="water trap">You check your sodden satchel.</choice>
+        </if>
+
+        <if check="[cardNumber] = 3">
+            <text>A power conduit splutters and bangs. Shorting out your flashlight you are plunged into darkness.
+                After a successful but desperate attempt to re-activate it you realise your satchel feels lighter.</text>
+            <choice station="conduit trap">You check what you have lost.</choice>
+        </if>
+
+        <if check="[cardNumber] = 4">
+            <text>A click and a loud hum warns you that, for some reason, the security system has been triggered.</text>
+            <choice station="security system">Standing in the middle of the section, you look for some way to evade it.</choice>
+        </if>
+
+        <if check="[cardNumber] = 5">
+            <text>Suddenly the bulkhead door ahead starts to close.</text>
+            <choice station="bulkhead door trap">You rush to keep it open.</choice>
+        </if>
+
+        <if check="[cardNumber] = 6">
+            <text>Navigating a ladder you slip and bang your head, knocking yourself unconscious.
+                When you come round you discover you have lost something.</text>
+            <choice station="lose treasure">You check your satchel.</choice>
+        </if>
+
+        <if check="[cardNumber] = 7">
+            <text>The corridor ahead appears to covered in a web of mucus.
+                Slowly stepping through you slip and find yourself stuck and unable to move.
+                You hope the life support fails before the owner of this web returns.</text>
+            <choice station="end"></choice>
+        </if>
+
+        <if check="[cardNumber] = 8 or [cardNumber] = 9 or [cardNumber] = 10">
+            <text>You find an emergency supply store.</text>
+            <choice station="take equipment">You take what is useful.</choice>
+        </if>
+
+        <if check="[cardNumber] = 11">
+            <text>A hatch open beneath your feet. You fall into an empty cargo bay.
+                The opening in the celing appears to be the only way out.
+            </text>
+            <choice station="pit trap">You look for a way to climb up.</choice>
+        </if>
+
+        <if check="[cardNumber] = 12">
+            <text>Walking along, suddenly a duct in the bulkhead bursts.
+                A radioactive cloud envelops you and you immediately feel disorientated.
+                Staggering away in confusion the affects eventually wear off.
+                You find yourself unfamiliar room with a hatch
+                to the port.</text>
+            <string name="came from" value="starboard"/>
+            <choice station="take movement card">You find out what's beyond the hatch.</choice>
+        </if>
+
+        <if check="[cardNumber] = 13">
+            <text>Your exploration has attracted a wandering form of alien life.
+                You must engage in combat!</text>
+            <choice station="fight monster" check="[gun ready]">You take out your laser tool and defend yourself.</choice>
+            <choice station="fight monster" check="not [gun ready]">You take out your laser tool and defend yourself.</choice>
+        </if>
+
+        <else>
+            <text>
+                Luck is on your side and trap fails to work.
+            </text>
+            <choice station="take movement card">You move forward.</choice>
+        </else>
+    </station>
+
+    <station id="fight monster">
+        <number name="monster hitpoints" value="{random 1, 13}"/>
+        <text></text>
+        <if check="[monster hitpoints] greater 10">
+            <text>You come face to face with a huge yeti like creature.
+                Green hair covers its body. Bearing its teeth the yellow claws lash out at you.</text>
+            <choice station="player fights"></choice>
+        </if>
+        <if check="[monster hitpoints] greater 7">
+            <text>A space pirate wearing a red bandanna spots you and rushes to battle.
+                A laser sword in hand its shouts insults in an alien dialect.</text>
+            <choice station="player fights"></choice>
+        </if>
+        <if check="[monster hitpoints] greater 4">
+            <text>The grey skinned alien is short with a large head and black eyes.
+            It threatens you with a what looks like a scalpel.</text>
+            <choice station="player fights"></choice>
+        </if>
+        <else>
+            <text>The blue gelatenous blob wobbles forward, its tendrils shooting out towards you.</text>
+            <choice station="player fights"></choice>
+        </else>
+    </station>
+
+    <station id="player fights">
+        <number name="monster hitpoints" value="{random 1, 13}"/>
+        <text></text>
+        <if check="[cards] lower 8">
+            <text></text>
+            <number name="hitpoints" value="7"/>
+            <choice station="hit monster">You attack the alien.</choice>
+        </if>
+        <if check="[cards] greater [max hitpoints]">
+            <text></text>
+            <number name="hitpoints" value="[max hitpoints]"/>
+            <choice station="hit monster">You attack the alien.</choice>
+        </if>
+        <else>
+            <text></text>
+            <number name="hitpoints" value="[cards]"/>
+            <choice station="hit monster">You attack the alien.</choice>
+        </else>
+    </station>
+
+    <station id="hit monster">
+        <state name="gun ready" value="[has gun] and [gun magazine] > 0"/>
+        <number name="cardNumber" value="{random 1, 13}"/>
+        <text></text>
+
+        <if check="[cardNumber] = 1">
+            <text>The alien hits you hard, crushing you against the bulkhead.
+                You feel bones break and bleed from several cuts.</text>
+            <number name="hitpoints" value="[hitpoints] - 5"/>
+            <string name="was hit" value="player"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] = 2">
+            <text>The alien slices into your flesh.</text>
+            <number name="hitpoints" value="[hitpoints] - 2"/>
+            <string name="was hit" value="player"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] = 3 or [cardNumber] = 4 or [cardNumber] = 5">
+            <text>You are hit.</text>
+            <number name="hitpoints" value="[hitpoints] - 1"/>
+            <string name="was hit" value="player"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] greater 5 and [cardNumber] lower 8 and not [gun ready]">
+            <text>You hit the alien.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 1"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] greater 5 and [cardNumber] lower 8 and [gun ready]">
+            <text>You shoot the alien.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 5"/>
+            <number name="gun magazine" value="[gun magazine]-1"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status" check="[gun magazine] = 0">With you gun charge empty, you take out your laser tool.</choice>
+            <choice station="check fight status" check="[gun magazine] greater 0"></choice>
+        </if>
+
+        <if check="[cardNumber] greater 7 and [cardNumber] lower 10 and not [gun ready]">
+            <text>Your laser tool slices open the alien.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 2"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] greater 7 and [cardNumber] lower 10 and [gun ready]">
+            <text>You blast the alien in the chest.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 6"/>
+            <number name="gun magazine" value="[gun magazine]-1"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status" check="[gun magazine] = 0">With you gun charge empty, you take out your laser tool.</choice>
+            <choice station="check fight status" check="[gun magazine] greater 0"></choice>
+        </if>
+
+        <if check="[cardNumber] = 10 or [cardNumber] = 11 and not [gun ready]">
+            <text>The laser tool efficiently remove one of the alien's extremities.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 3"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] = 10 or [cardNumber] = 11 and [gun ready]">
+            <text>Your gun shoots one of the alien's extremities off.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 7"/>
+            <number name="gun magazine" value="[gun magazine]-1"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] = 12 and not [gun ready]">
+            <text>Your weapon slices into the centre of the alien.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 3"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status"/>
+        </if>
+
+        <if check="[cardNumber] = 12 and [gun ready]">
+            <text>The laser blast from your gun burns straight through the alien.</text>
+            <number name="monster hitpoints" value="[monster hitpoints] - 8"/>
+            <number name="gun magazine" value="[gun magazine]-1"/>
+            <string name="was hit" value="monster"/>
+            <choice station="check fight status" check="[gun magazine] greater 0"></choice>
+        </if>
+
+        <if check="[cardNumber] = 13">
+            <text>A powerful blow knocks you down the corridor.</text>
+            <number name="hitpoints" value="[hitpoints] - 3"/>
+            <string name="was hit" value="player"/>
+            <choice station="check fight status"/>
+        </if>
+
+    </station>
+
+    <station id="check fight status">
+        <text></text>
+        <if check="[monster hitpoints] lower 1">
+            <text>The alien is dead, you have survived.</text>
+            <choice station="take equipment"/>
+        </if>
+        <if check="[hitpoints] lower 1">
+            <text>The alien hardly acknowledges your impending death before moving on.
+                You have been killed. The starship will remain here adrift in space.</text>
+            <choice station="end"></choice>
+        </if>
+        <if check="[was hit] = 'player' ">
+            <text>You have [hitpoints] hitpoints left.</text>
+            <choice station="hit monster"></choice>
+        </if>
+        <if check="[was hit] = 'monster' and [monster hitpoints] greater 4">
+            <text>The alien seems surprised and re-doubles its attack.</text>
+            <choice station="hit monster"></choice>
+        </if>
+        <if check="[was hit] = 'monster' and [monster hitpoints] greater 2">
+            <text>The alien is badly wounded but fights on.</text>
+            <choice station="hit monster"></choice>
+        </if>
+        <if check="[was hit] = 'monster' and [monster hitpoints] lower 3">
+            <text>The alien is ready to drop but lunges again.</text>
+            <choice station="hit monster"></choice>
+        </if>
+        <else>
+            <text>You have [hitpoints] hitpoints left.</text>
+            <choice station="hit monster"/>
+        </else>
+    </station>
+
+    <station id="take treasure">
+        <text></text>
+        <string name="adjustment" value="found"/>
+        <choice station="adjust treasure"/>
+    </station>
+
+    <station id="airlock trap">
+        <text></text>
+        <if check="[has magnetic boots]">
+            <text>You activate your magnetic boots which lock you to the floor.</text>
+            <choice station="take movement card">With the atmosphere whistling out the airlock
+                you move through the next door to safety.</choice>
+        </if>
+        <else>
+            <text>You fly out of the airlock. The harsh environment of space quickly extinguishes your life.</text>
+            <choice station="end"></choice>
+        </else>
+    </station>
+
+    <station id="water trap">
+        <number name="energy cells" value="[energy cells] - 10"/>
+        <number name="protein bars" value="[protein bars] - 2"/>
+        <text>The water has ruined some of your energy cells and protein bars.
+            You have [energy cells] energy cells and [protein bars] protein bars left.</text>
+        <choice station="take movement card">You keep walking, drying off as you go.</choice>
+    </station>
+
+    <station id="conduit trap">
+
+        <text></text>
+
+        <if check="[protein bars] greater 0">
+            <number name="protein bars" value="[protein bars] - 1"/>
+            <text>You lost a protein bar. You have [protein bars] protein bars left.</text>
+            <choice station="take movement card">You continue on your way.</choice>
+        </if>
+
+        <if check="[has magnetic boots]">
+            <state name="has magnetic boots" value="false"/>
+            <text>You lost the magnetic boots.</text>
+            <choice station="take movement card">You continue on your way.</choice>
+        </if>
+
+        <if check="[energy cells] greater 10">
+            <number name="energy cells" value="[energy cells] - 10"/>
+            <text>You lost ten energy cells. You have [energy cells] energy cells left.</text>
+            <choice station="take movement card">You continue on your way.</choice>
+        </if>
+
+        <if check="[energy cells] lower 11">
+            <number name="energy cells" value="0"/>
+            <text>You lost all your remaining energy cells.</text>
+            <choice station="take movement card">You continue on your way.</choice>
+        </if>
+
+    </station>
+
+    <station id="security system">
+        <text></text>
+        <if check="[emp devices] greater 0">
+            <number name="emp devices" value="[emp devices] - 1"/>
+            <text>Thinking quickly you activate the E.M.P. device just in time to disable the lasers.
+                You discard the discharged device.</text>
+            <choice station="take movement card" check="[emp devices] lower 1">You discard the discharged device. You continue on your way.</choice>
+            <choice station="take movement card" check="[emp devices] greater 0">You have [emp devices] more E.M.P. devices. You continue on your way.</choice>
+        </if>
+        <else>
+            <text>With no where to hide the laser net activates cutting you in half.</text>
+            <choice station="end">You have failed.</choice>
+        </else>
+    </station>
+
+    <station id="bulkhead door trap">
+        <text></text>
+        <if check="[emp devices] greater 0">
+            <number name="emp devices" value="[emp devices] - 1"/>
+            <text>Slamming the button of your E.M.P. device the door stops in its tracks.</text>
+            <choice station="take movement card" check="[emp devices] lower 1">You discard the discharged device. You continue on your way.</choice>
+            <choice station="take movement card" check="[emp devices] greater 0">You have [emp devices] more E.M.P. devices. You continue on your way.</choice>
+        </if>
+        <if check="[emp devices] lower 1 and [open paths] greater 1">
+            <number name="open paths" value="[open paths] - 1"/>
+            <text>The door slams shut in your face.</text>
+            <choice station="take movement card">You go back to find a different corridor.</choice>
+        </if>
+        <else>
+            <text>The door closes, shutting off you last way ahead.</text>
+            <choice station="end">There's nowhere left to explore. Without enough energy cells your stranded in space.</choice>
+        </else>
+    </station>
+
+    <station id="take equipment">
+        <number name="cardNumber" value="{random 1, 13}"/>
+
+        <text></text>
+
+        <if check="[cardNumber] equal 1">
+            <number name="protein bars" value="[protein bars] + 1"/>
+            <text>You found a protein bar.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 2">
+            <number name="energy cells" value="[energy cells] + 10"/>
+            <text>You found ten energy cells.
+                You now have [energy cells] energy cells.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 3">
+            <number name="energy cells" value="[energy cells] + 15"/>
+            <text>You found fifteen energy cells.
+                You now have [energy cells] energy cells.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 4">
+            <number name="protein bars" value="[protein bars] + 2"/>
+            <text>You found two protein bars.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 5">
+            <number name="emp devices" value="[emp devices] + 1"/>
+            <text>You found an E.M.P. device.</text>
+            <choice station="take movement card" check="[emp devices] greater 1">You now have [emp devices]. You continue.</choice>
+            <choice station="take movement card" check="[emp devices] lower 2">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 6 and not [has magnetic boots]">
+            <state name="has magnetic boots" value="true"/>
+            <text>You found some magnetic boots.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 7">
+            <number name="energy cells" value="[energy cells] + 20"/>
+            <text>You found twenty energy cells.
+                You now have [energy cells] energy cells.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 8">
+            <number name="protein bars" value="[protein bars] + 3"/>
+            <text>You found three protein bars.
+                You now have [protein bars] protein bars.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 9">
+            <number name="emp devices" value="[emp devices] + 1"/>
+            <text>You found an E.M.P. device.</text>
+            <choice station="take movement card" check="[emp devices] greater 1">You now have [emp devices]. You continue on your way.</choice>
+            <choice station="take movement card" check="[emp devices] lower 2">You continue on your way.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 10 and not [has magnetic boots]">
+            <state name="has magnetic boots" value="true"/>
+            <text>You found magnetic boots.</text>
+            <choice station="take movement card">You continue on your way.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 11">
+            <number name="protein bars" value="[protein bars] + 3"/>
+            <number name="energy cells" value="[energy cells] + 10"/>
+            <text>You found three protein bars and ten energy cells.
+                You now have [energy cells] energy cells and [protein bars] protein bars.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] equal 12">
+            <number name="protein bars" value="[protein bars] + 3"/>
+            <number name="energy cells" value="[energy cells] + 20"/>
+            <text>You found three protein bars and twenty energy cells.
+                You now have [energy cells] energy cells and [protein bars] protein bars.</text>
+            <choice station="take movement card">You continue.</choice>
+        </if>
+
+        <if check="[cardNumber] lower 14">
+            <state name="has laser gun" value="true"/>
+            <text>You found a laser gun.
+                The gun will consume your energy cells but offers greater protection.
+                You need [gun magazine size] energy cells to reload the gun.
+                You have [energy cells] energy cells.</text>
+            <choice station="take gun">Take the gun.</choice>
+            <choice station="take movement card">Leave the gun.</choice>
+        </if>
+
+    </station>
+
+    <station id="take gun">
+        <state name="has gun" value="true"/>
+        <choice station="take movement card">You take the gun.</choice>
+    </station>
+
+    <station id="lose treasure">
+        <text></text>
+        <string name="adjustment" value="lost"/>
+        <choice station="adjust treasure"/>
+    </station>
+
+    <station id="pit trap">
+        <text></text>
+        <if check="[has magnetic boots]">
+            <text>Activating the magnetic boots you scale the wall, clambering back to the corridor.</text>
+            <choice station="take movement card">You continue on your way.</choice>
+        </if>
+        <else>
+            <text>The walls are too smooth leaving you no way to escape.
+                The remaining power soon runs out leaving you without heat or oxygen.</text>
+            <choice station="end"></choice>
+        </else>
+    </station>
+
+    <station id="adjust treasure">
+        <number name="change" value="{random 1, 30}"/>
+
+        <text></text>
+
+        <if check="[adjustment] equal 'found'">
+            <number name="energy cells" value="[energy cells]+[change]"/>
+            <text>You found [change] energy cells.</text>
+            <choice station="take movement card">You now have [energy cells] energy cells.</choice>
+        </if>
+
+        <if check="[adjustment] equal 'lost' and [energy cells] greater [change]">
+            <number name="energy cells" value="[energy cells]-[change]"/>
+            <text>You lost [change] energy cells.</text>
+            <choice station="take movement card">You now have [energy cells] energy cells.</choice>
+        </if>
+
+        <if check="[adjustment] equal 'lost' and [energy cells] equal 0">
+            <text>Luckily you had no energy cells to lose.</text>
+            <choice station="take movement card"></choice>
+        </if>
+
+        <else>
+            <text>You lost all your energy cells.</text>
+            <number name="energy cells" value="0"/>
+            <choice station="take movement card"></choice>
+        </else>
+    </station>
+
+    <station id="engine room">
+        <number name="monster hitpoints" value="15"/>
+        <text></text>
+        <choice station="player fights"></choice>
+    </station>
+
+    <station id="end">
+        <text>You explored [cards] sections of the starship but only found [energy cells] energy cells.
+            Maybe you'll have better luck next time?</text>
+    </station>
+
+</quest>

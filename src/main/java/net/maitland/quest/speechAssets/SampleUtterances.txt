@@ -1,0 +1,7 @@
+ChoiceIntent I Choose Option {Choice}
+ChoiceIntent I Choose Choice {Choice}
+ChoiceIntent Choose Option {Choice}
+ChoiceIntent Choose Choice {Choice}
+ChoiceIntent Choose {Choice}
+ChoiceIntent Option {Choice}
+ChoiceIntent Choice {Choice}
